@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import mongoose from "mongoose";
-import shortURL from "./models/shortURL";
+import ShortURL from "./models/shortURL";
 
 const app = express();
 mongoose.connect("mongodb://localhost/urlShortener", {
@@ -13,13 +13,23 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", async (req, res) => {
-  const shortURLs = await shortURL.find();
+  const shortURLs = await ShortURL.find();
   res.render(`${__dirname}/views/index`, { shortURLs: shortURLs });
 });
 
 app.post("/shortenURL", async (req, res) => {
-  await shortURL.create({ full: req.body.fullURL });
+  await ShortURL.create({ full: req.body.fullURL });
   res.redirect("/");
+});
+
+app.get("/:shortURL", async (req, res) => {
+  const shortURL = await ShortURL.findOne({ short: req.params.shortURL });
+  if (shortURL == null) return res.sendStatus;
+
+  shortURL.clicks++;
+  shortURL.save();
+
+  res.redirect(shortURL.full);
 });
 
 app.listen(process.env.PORT || 1337);
