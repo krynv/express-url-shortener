@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import mongoose from "mongoose";
-import shortURLSchema from "./models/shortURL";
+import shortURL from "./models/shortURL";
 
 const app = express();
 mongoose.connect("mongodb://localhost/urlShortener", {
@@ -12,12 +12,13 @@ mongoose.connect("mongodb://localhost/urlShortener", {
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 
-app.get("/", (req, res) => {
-  res.render(path.join(`${__dirname}/views/index`));
+app.get("/", async (req, res) => {
+  const shortURLs = await shortURL.find();
+  res.render(`${__dirname}/views/index`, { shortURLs: shortURLs });
 });
 
 app.post("/shortenURL", async (req, res) => {
-  await shortURLSchema.create({ full: req.body.fullURL });
+  await shortURL.create({ full: req.body.fullURL });
   res.redirect("/");
 });
 
